@@ -193,7 +193,7 @@ def get_public_domains(file_name):
             continue
     return public_domains
 
-print get_public_cert_score("cp.rackspace.com")
+print get_public_cert_score("rackspace.com")
 
 
 
