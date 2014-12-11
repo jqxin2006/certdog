@@ -14,6 +14,8 @@ import re
 import socket
 from struct import *
 from datetime import datetime
+from json import dumps
+import requests
 # Browser
 br = mechanize.Browser()
 
@@ -72,6 +74,8 @@ def try_one_score(domain, ip):
     """
     base_url = "https://www.ssllabs.com/ssltest/analyze.html?d=%s&s=%s"
     test_url = base_url % (domain, ip)
+    print test_url
+
 
     r = br.open(test_url)
     html = r.read()
@@ -161,6 +165,7 @@ def get_public_cert_score(domain):
     if lookup(ip) is False:
         result["domain"] = domain
         result["ip"] = ip
+        print get_score(domain, ip)
         (score, issues) = get_score(domain, ip)
         result["score"] = score
         result["issues"] = issues
@@ -193,7 +198,31 @@ def get_public_domains(file_name):
             continue
     return public_domains
 
-print get_public_cert_score("rackspace.com")
+
+def pump_one_record(payload):
+    """
+    This function pumps one record into our control panel.
+    """
+    url = "http://a-staging.rakr.net/v1/security/certificates"
+    resp = requests.post(url, data=payload)
+    print resp.status_code
 
 
+def pump_records(file_name):
+    """
+    This function reads the content from the file_name, then
+    it get the score and security issues for all public domains by
+    using function get_public_cert_score.
+    """
+    the_public_domains = get_public_domains(file_name)
+    for domain in the_public_domains:
+        print domain
+        result = get_public_cert_score(domain)
+        if len(result) > 0:
+            pump_one_record(dumps(result))
+            print dumps(result)
 
+print dumps(get_public_cert_score("rackspace.com"))
+
+#the_file_name = "the_domains.txt"
+#pump_records(the_file_name)
